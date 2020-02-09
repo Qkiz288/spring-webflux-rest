@@ -127,7 +127,7 @@ class CategoryControllerTest {
                 .expectStatus()
                 .isOk();
 
-        verify(categoryRepository).save(any());
+        verify(categoryRepository, never()).save(any());
     }
 
     @Test

@@ -60,11 +60,8 @@ public class CategoryController {
             foundCategory.setDescription("");
         }
 
-        if (category.getDescription() == null) {
-            category.setDescription("");
-        }
-
-        if (!foundCategory.getDescription().equals(category.getDescription())) {
+        if (category.getDescription() != null &&
+                !foundCategory.getDescription().equals(category.getDescription())) {
             foundCategory.setDescription(category.getDescription());
             return categoryRepository.save(foundCategory);
         }
