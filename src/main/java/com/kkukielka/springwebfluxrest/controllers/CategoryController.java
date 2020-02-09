@@ -43,4 +43,33 @@ public class CategoryController {
         return categoryRepository.save(category);
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping("/{id}")
+    public Mono<Category> patchCategory(@PathVariable String id, @RequestBody Category category) throws RuntimeException {
+        Category foundCategory = categoryRepository.findById(id).block();
+
+        if (foundCategory == null) {
+            throw new RuntimeException(String.format("Category with ID = %s not found", id));
+        }
+
+        if (category == null) {
+            throw new RuntimeException("Request category is null");
+        }
+
+        if (foundCategory.getDescription() == null) {
+            foundCategory.setDescription("");
+        }
+
+        if (category.getDescription() == null) {
+            category.setDescription("");
+        }
+
+        if (!foundCategory.getDescription().equals(category.getDescription())) {
+            foundCategory.setDescription(category.getDescription());
+            return categoryRepository.save(foundCategory);
+        }
+
+        return Mono.just(foundCategory);
+    }
+
 }

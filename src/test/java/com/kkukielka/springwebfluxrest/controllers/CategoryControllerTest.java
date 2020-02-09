@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.*;
 
 class CategoryControllerTest {
 
@@ -31,7 +32,7 @@ class CategoryControllerTest {
     @Test
     void listCategories() {
         // given
-        BDDMockito.given(categoryRepository.findAll())
+        given(categoryRepository.findAll())
                 .willReturn(Flux.just(Category.builder().description("desc1").build(),
                                       Category.builder().description("desc2").build()));
         // when - then
@@ -44,7 +45,7 @@ class CategoryControllerTest {
     @Test
     void getCategoryById() {
         // given
-        BDDMockito.given(categoryRepository.findById(anyString()))
+        given(categoryRepository.findById(anyString()))
                 .willReturn(Mono.just(Category.builder().description("desc1").build()));
 
         // when - then
@@ -57,7 +58,7 @@ class CategoryControllerTest {
     @Test
     void createCategory() {
         // given
-        BDDMockito.given(categoryRepository.saveAll(any(Publisher.class)))
+        given(categoryRepository.saveAll(any(Publisher.class)))
                 .willReturn(Flux.just(Category.builder().build()));
 
         Mono<Category> categoryToSave = Mono.just(Category.builder().description("test").build());
@@ -74,7 +75,7 @@ class CategoryControllerTest {
     @Test
     void updateCategory() {
         // given
-        BDDMockito.given(categoryRepository.save(any(Category.class)))
+        given(categoryRepository.save(any(Category.class)))
                 .willReturn(Mono.just(Category.builder().build()));
 
         Mono<Category> categoryToUpdate = Mono.just(Category.builder().description("test").build());
@@ -85,6 +86,90 @@ class CategoryControllerTest {
                 .exchange()
                 .expectStatus()
                 .isOk();
+    }
+
+    @Test
+    void patchCategoryWithChanges() {
+        // given
+        given(categoryRepository.findById(anyString()))
+                .willReturn(Mono.just(Category.builder().description("abc").build()));
+
+        given(categoryRepository.save(any(Category.class)))
+                .willReturn(Mono.just(Category.builder().build()));
+
+        Mono<Category> categoryToUpdate = Mono.just(Category.builder().description("new abc").build());
+
+        // when - then
+        webTestClient.patch().uri(CategoryController.BASE_URL + "/1")
+                .body(categoryToUpdate, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(categoryRepository).save(any());
+    }
+
+    @Test
+    void patchCategoryWithNullChanges() {
+        // given
+        given(categoryRepository.findById(anyString()))
+                .willReturn(Mono.just(Category.builder().description("abc").build()));
+
+        given(categoryRepository.save(any(Category.class)))
+                .willReturn(Mono.just(Category.builder().build()));
+
+        Mono<Category> categoryToUpdate = Mono.just(Category.builder().build());
+
+        // when - then
+        webTestClient.patch().uri(CategoryController.BASE_URL + "/1")
+                .body(categoryToUpdate, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(categoryRepository).save(any());
+    }
+
+    @Test
+    void patchCategoryNoChanges() {
+        // given
+        given(categoryRepository.findById(anyString()))
+                .willReturn(Mono.just(Category.builder().description("abc").build()));
+
+        given(categoryRepository.save(any(Category.class)))
+                .willReturn(Mono.just(Category.builder().build()));
+
+        Mono<Category> categoryToUpdate = Mono.just(Category.builder().description("abc").build());
+
+        // when - then
+        webTestClient.patch().uri(CategoryController.BASE_URL + "/1")
+                .body(categoryToUpdate, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    void patchCategoryNoChangesNulls() {
+        // given
+        given(categoryRepository.findById(anyString()))
+                .willReturn(Mono.just(Category.builder().build()));
+
+        given(categoryRepository.save(any(Category.class)))
+                .willReturn(Mono.just(Category.builder().build()));
+
+        Mono<Category> categoryToUpdate = Mono.just(Category.builder().build());
+
+        // when - then
+        webTestClient.patch().uri(CategoryController.BASE_URL + "/1")
+                .body(categoryToUpdate, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(categoryRepository, never()).save(any());
     }
 
 }
